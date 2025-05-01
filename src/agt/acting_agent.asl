@@ -1,6 +1,7 @@
 // acting agent
 
 /* Initial beliefs and rules */
+selectedTemperatureReading(0).
 
 // The agent has a belief about the location of the W3C Web of Thing (WoT) Thing Description (TD)
 // that describes a Thing of type https://ci.mines-stetienne.fr/kg/ontology#PhantomX
@@ -85,16 +86,28 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
     .
 
 /* 
- * Plan for reacting to the addition of the goal !select_reading(TempReadings, Celsius)
- * Triggering event: addition of goal !select_reading(TempReadings, Celsius)
+ * Plan for reacting to the addition of the goal !select_reading(TemperatureReadings, Celsius)
+ * Triggering event: addition of goal !select_reading(TemperatureReadings, Celsius)
  * Context: true (the plan is always applicable)
- * Body: unifies the variable Celsius with the 1st temperature reading from the list TempReadings
+ * Body: unifies the variable Celsius with the 1st temperature reading from the list TemperatureReadings
 */
-@select_reading_task_0_plan
-+!select_reading(TempReadings, Celsius)
-    :  true
-    <-  .nth(0, TempReadings, Celsius);
-    .
+@select_reading_task_plan
++!select_reading(TemperatureReadings) : true <-
+
+	// Get interaction trust rating
+	.findall([SourceAgent, TargetAgent, MessageContent, ITRating], interaction_trust(SourceAgent, TargetAgent, MessageContent, ITRating), ITList);
+	.print("Received ", .length(ITList), " interaction trust ratings.");
+
+	// Create an artifact of type Truster
+	makeArtifact("trustCalculator", "tools.Truster", [], TrusterId);
+
+	// Get trustworthy agent using interaction trust ratings
+	getHighestAverageRatingAgent_IT(ITList, TrustedAgent)[artifact_id(TrusterId)];
+
+	// Use the trusted agent to get the temperature reading
+	getTempReadingByAgent(TrustedAgent, TemperatureReadings, TrustedTemperatureReading)[artifact_id(TrusterId)];
+	.print("Found trusted agent: ", TrustedAgent, " with temperature reading: ", TrustedTemperatureReading);
+	-+selectedTemperatureReading(TrustedTemperatureReading).
 
 /* 
  * Plan for reacting to the addition of the goal !manifest_temperature
@@ -105,10 +118,19 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
  * movement of the robotic arm. Then, manifests the temperature with the robotic arm
 */
 @manifest_temperature_plan 
-+!manifest_temperature
-    :  temperature(Celsius) & robot_td(Location)
-    <-  .print("I will manifest the temperature: ", Celsius);
-        convert(Celsius, -20.00, 20.00, 200.00, 830.00, Degrees)[artifact_id(ConverterId)]; // converts Celsius to binary degrees based on the input scale
++!manifest_temperature : robot_td(Location)
+    <-
+        // Select a temperature reading from the list of temperature readings
+        .findall([TemperatureReading, Agent], temperature(TemperatureReading)[source(Agent)], TemperatureReadings);
+        !select_reading(TemperatureReadings);
+
+        // Find the temperature reading of the best trusted agent
+        .findall(T, selectedTemperatureReading(T), SelectedTemperatureReadingList);
+        .nth(0, SelectedTemperatureReadingList, SelectedTemperature);
+
+        .print("I will manifest the temperature: ", SelectedTemperature);
+        makeArtifact("converter_was", "tools.Converter", [], ConverterId);
+        convert(SelectedTemperature, -20.00, 20.00, 200.00, 830.00, Degrees)[artifact_id(ConverterId)]; // converts SelectedTemperature to binary degrees based on the input scale
         .print("Temperature Manifesting (moving robotic arm to): ", Degrees);
 
         /* 
