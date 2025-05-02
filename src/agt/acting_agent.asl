@@ -123,13 +123,13 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Task 1: Get trustworthy agent using interaction trust ratings
-	//getHighestAverageRatingAgent_IT(ITList, TrustedAgent)[artifact_id(TrusterId)];
+	getHighestAverageRatingAgent_IT(ITList, TrustedAgent)[artifact_id(TrusterId)];
 
 	// Task 3: Get trustworthy agent using interaction and cerficiation trust ratings
 	//getHighestAverageRatingAgent_IT_CR(ITList, CRList, TrustedAgent)[artifact_id(TrusterId)];
 
 	// Task 4: Get trustworthy agent using interaction, certification and witness trust ratings
-	getHighestAverageRatingAgent_IT_CR_WR(ITList, CRList, WRList, TrustedAgent)[artifact_id(TrusterId)];
+	//getHighestAverageRatingAgent_IT_CR_WR(ITList, CRList, WRList, TrustedAgent)[artifact_id(TrusterId)];
 
 	// Use the trusted agent to get the temperature reading
 	getTempReadingByAgent(TrustedAgent, TemperatureReadings, TrustedTemperatureReading)[artifact_id(TrusterId)];
