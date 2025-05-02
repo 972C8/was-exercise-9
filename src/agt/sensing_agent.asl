@@ -2,6 +2,18 @@
 
 /* Initial beliefs and rules */
 
+// Store witness ratings of sensing agents for the agents
+witness_ratings(
+  [sensing_agent_1, sensing_agent_2, sensing_agent_3, sensing_agent_4, sensing_agent_5, sensing_agent_6, sensing_agent_7, sensing_agent_8, sensing_agent_9],
+  [1, 1, 1, 1, -1, -1, -1, -1, -1]
+).
+
+//TEST: Uncomment to see rogues winning when the sensing agents distrust each other 
+// witness_ratings(
+//   [sensing_agent_1, sensing_agent_2, sensing_agent_3, sensing_agent_4, sensing_agent_5, sensing_agent_6, sensing_agent_7, sensing_agent_8, sensing_agent_9],
+//   [1, 1, 1, 1, -1, -1, -1, -1, -1]
+// ).
+
 // infers whether there is a mission for which goal G has to be achieved by an agent with role R
 role_goal(R,G) :- role_mission(R,_,M) & mission_goal(M,G).
 
@@ -25,6 +37,24 @@ i_have_plans_for(R) :- not (role_goal(R,G) & not has_plan_for(G)).
     :  true
     <-  .print("Hello world");
     .
+
+// Task 4: Send witness reputation to the acting agent
+@temperature_plan
++temperature(Celsius)[source(Sender)] : true <-
+	.print("Received temperature reading from ", Sender, ": ", Celsius);
+   .findall([Agents, WRRatings], witness_ratings(Agents, WRRatings), WRRatingsList);
+    .nth(0, WRRatingsList, WR);
+   .nth(0, WR, Agents);
+   .nth(1, WR, WRRatings);
+   .my_name(Name);
+   for ( .range(I,0,8) ) {
+     .nth(I, Agents, Agent);
+     .nth(I, WRRatings, WRRating);
+		if (Sender == Agent & Agent \== Name) {
+			.print("Sending witness reputation to acting_agent: witness_reputation(", Name, ", ", Agent, ", temperature(", Celsius, "), ", WRRating, ")");
+     		.send(acting_agent, tell, witness_reputation(Name, Agent, temperature(Celsius), WRRating));
+		};
+   }.
 
 /* 
  * Plan for reacting to the addition of the goal !read_temperature

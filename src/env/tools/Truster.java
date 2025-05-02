@@ -5,10 +5,45 @@ import java.util.*;
 
 public class Truster extends Artifact {
 
+    //Task 1
     @OPERATION
     public void getHighestAverageRatingAgent_IT(Object[] ITList, OpFeedbackParam<Object> mostTrustworthyAgent) {
         var ratings = calculateAverageRatings(ITList);
         mostTrustworthyAgent.set(findHighestRatedAgent(ratings));
+    }
+
+    //Task 3
+    @OPERATION
+    public void getHighestAverageRatingAgent_IT_CR(Object[] ITList, Object[] CRList,
+            OpFeedbackParam<String> mostTrustworthyAgent) {
+        var itRatings = calculateAverageRatings(ITList);
+        var crRatings = calculateAverageRatings(CRList);
+
+        var combinedRatings = new HashMap<String, Double>();
+        itRatings.forEach((agent, itRating) -> {
+            double crRating = crRatings.getOrDefault(agent, 0.0);
+            combinedRatings.put(agent, 0.5 * itRating + 0.5 * crRating);
+        });
+
+        mostTrustworthyAgent.set(findHighestRatedAgent(combinedRatings));
+    }
+
+    //Task 4
+    @OPERATION
+    public void getHighestAverageRatingAgent_IT_CR_WR(Object[] ITList, Object[] CRList, Object[] WRList,
+            OpFeedbackParam<String> mostTrustworthyAgent) {
+        var itRatings = calculateAverageRatings(ITList);
+        var crRatings = calculateAverageRatings(CRList);
+        var wrRatings = calculateAverageRatings(WRList);
+
+        var combinedRatings = new HashMap<String, Double>();
+        itRatings.forEach((agent, itRating) -> {
+            double crRating = crRatings.getOrDefault(agent, 0.0);
+            double wrRating = wrRatings.getOrDefault(agent, 0.0);
+            combinedRatings.put(agent, (itRating + crRating + wrRating) / 3.0);
+        });
+
+        mostTrustworthyAgent.set(findHighestRatedAgent(combinedRatings));
     }
 
     @OPERATION

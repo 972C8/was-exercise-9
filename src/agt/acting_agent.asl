@@ -94,15 +94,42 @@ robot_td("https://raw.githubusercontent.com/Interactions-HSG/example-tds/main/td
 @select_reading_task_plan
 +!select_reading(TemperatureReadings) : true <-
 
-	// Get interaction trust rating
+	// Task 3: Ask temperature_reader agents for certificates
+	.findall([Agent, Mission], commitment(Agent,Mission,_), CommitmentList);
+	for ( .member([Agent, Mission], CommitmentList) ) {
+		if (Mission == temperature_reading_mission) {
+			.send(Agent, askAll, certified_reputation(_,_,_,_));
+		}
+	};
+	.wait(1000);
+
+	// Task 1: Get interaction trust rating
 	.findall([SourceAgent, TargetAgent, MessageContent, ITRating], interaction_trust(SourceAgent, TargetAgent, MessageContent, ITRating), ITList);
 	.print("Received ", .length(ITList), " interaction trust ratings.");
+
+    // Task 3: Get certified reputation rating
+    .findall([CertificationAgent, TargetAgent, MessageContent, CRRating], certified_reputation(CertificationAgent, TargetAgent, MessageContent, CRRating), CRList);
+	.print("Received ", .length(CRList), " certified reputation ratings.");
+   
+    // Task 4: Get witness reputation rating
+    .findall([WitnessAgent, TargetAgent, MessageContent, WRRating], witness_reputation(WitnessAgent, TargetAgent, MessageContent, WRRating), WRList);
+	.print("Received ", .length(WRList), " witness reputation ratings.");
 
 	// Create an artifact of type Truster
 	makeArtifact("trustCalculator", "tools.Truster", [], TrusterId);
 
-	// Get trustworthy agent using interaction trust ratings
-	getHighestAverageRatingAgent_IT(ITList, TrustedAgent)[artifact_id(TrusterId)];
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // ! Uncomment the relevant task to be used for trust calculation. !
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	// Task 1: Get trustworthy agent using interaction trust ratings
+	//getHighestAverageRatingAgent_IT(ITList, TrustedAgent)[artifact_id(TrusterId)];
+
+	// Task 3: Get trustworthy agent using interaction and cerficiation trust ratings
+	//getHighestAverageRatingAgent_IT_CR(ITList, CRList, TrustedAgent)[artifact_id(TrusterId)];
+
+	// Task 4: Get trustworthy agent using interaction, certification and witness trust ratings
+	getHighestAverageRatingAgent_IT_CR_WR(ITList, CRList, WRList, TrustedAgent)[artifact_id(TrusterId)];
 
 	// Use the trusted agent to get the temperature reading
 	getTempReadingByAgent(TrustedAgent, TemperatureReadings, TrustedTemperatureReading)[artifact_id(TrusterId)];
